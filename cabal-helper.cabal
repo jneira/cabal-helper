@@ -110,12 +110,12 @@ common build-deps
   build-depends:       unix-compat      < 0.6  && >= 0.4.3.1
 
   if flag(dev)
-    ghc-options:       -Wall -fwarn-incomplete-uni-patterns
+    ghc-options:       -Wall
 
 
-common c-h-internal
+library c-h-internal
   import:             build-deps, extensions
-  other-modules:
+  exposed-modules:
                        CabalHelper.Compiletime.Cabal
                        CabalHelper.Compiletime.CompPrograms
                        CabalHelper.Compiletime.Compat.Environment
@@ -139,7 +139,7 @@ common c-h-internal
                        Paths_cabal_helper
   autogen-modules:
                        Paths_cabal_helper
-  other-modules:
+  exposed-modules:
                        Symlink
   if os(windows)
     hs-source-dirs:    os/win
@@ -147,19 +147,8 @@ common c-h-internal
     hs-source-dirs:    os/posix
   hs-source-dirs:      src
 
-common c-h-lib
-  import:             build-deps, extensions, c-h-internal
-  other-modules:
-                       Distribution.Helper
-                       Distribution.Helper.Discover
-  other-modules:
-                       Paths_cabal_helper
-  autogen-modules:
-                       Paths_cabal_helper
-  hs-source-dirs:      lib
-
 library
-  import:              build-deps, extensions, c-h-internal
+  import:              build-deps, extensions
   exposed-modules:     Distribution.Helper
                        Distribution.Helper.Discover
   other-modules:
@@ -167,39 +156,45 @@ library
   autogen-modules:
                        Paths_cabal_helper
   hs-source-dirs:      lib
+  build-depends:       c-h-internal
 
 test-suite compile-test
-  import:              build-deps, extensions, c-h-internal
+  import:              build-deps, extensions
   type:                exitcode-stdio-1.0
   main-is:             CompileTest.hs
   other-modules:       TestOptions
   hs-source-dirs:      tests
-  ghc-options:         -Wall -fwarn-incomplete-uni-patterns
+  ghc-options:         -Wall
+  build-depends:       c-h-internal
 
 test-suite programs-test
-  import:              build-deps, extensions, c-h-internal
+  import:              build-deps, extensions
   type:                exitcode-stdio-1.0
   main-is:             ProgramsTest.hs
   hs-source-dirs:      tests
-  ghc-options:         -Wall -fwarn-incomplete-uni-patterns
-  build-depends:       pretty-show
+  ghc-options:         -Wall
+  build-depends:       c-h-internal
+                     , pretty-show
 
 test-suite ghc-session
-  import:              build-deps, extensions, c-h-lib
+  import:              build-deps, extensions
   type:                exitcode-stdio-1.0
   main-is:             GhcSession.hs
   other-modules:       TestOptions
   hs-source-dirs:      tests
-  ghc-options:         -Wall -fwarn-incomplete-uni-patterns
+  ghc-options:         -Wall
   build-depends:       ghc              < 8.9  && >= 8.0.2
                      , pretty-show      < 1.9  && >= 1.8.1
+                     , cabal-helper
+                     , c-h-internal
 
 test-suite examples
-  import:              build-deps, extensions, c-h-lib
+  import:              build-deps, extensions
   type:                exitcode-stdio-1.0
   main-is:             Examples.hs
   hs-source-dirs:      tests
-  ghc-options:         -Wall -fwarn-incomplete-uni-patterns
+  ghc-options:         -Wall
+  build-depends:       cabal-helper
 
 executable cabal-helper-main
   default-language:    Haskell2010
@@ -220,7 +215,7 @@ executable cabal-helper-main
   else
     buildable:         False
 
-  ghc-options:         -Wall -fno-warn-unused-imports -fwarn-incomplete-uni-patterns
+  ghc-options:         -Wall -fno-warn-unused-imports
   build-depends:       base             < 5    && >= 4.9.1.0
                      , Cabal
                      , containers
